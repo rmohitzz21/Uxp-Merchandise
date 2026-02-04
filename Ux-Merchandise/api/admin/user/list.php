@@ -14,7 +14,7 @@ if($conn->connect_error){
 
 // Adjust table/column name if needed
 
-$sql  = "SELECT id, first_name, last_name, email, phone, role, created_at FROM users ORDER BY created_at DESC";
+$sql  = "SELECT id, first_name, last_name, email, phone, role, created_at, is_blocked FROM users ORDER BY created_at DESC";
 $result = $conn->query($sql);
 
 $users = [];

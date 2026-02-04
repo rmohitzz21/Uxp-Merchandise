@@ -328,12 +328,49 @@
         display: none;
       }
 
+      /* Mobile & OTP Styles */
+      .auth-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.8);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(5px);
+      }
+      .auth-modal-content {
+          background: #2a2a2a;
+          padding: 2rem;
+          border-radius: 16px;
+          width: 90%;
+          max-width: 400px;
+          text-align: center;
+          position: relative;
+          color: white;
+          border: 1px solid rgba(255,255,255,0.1);
+      }
+      .close-modal {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: #aaa;
+      }
+      .otp-input-group {
+          margin: 1.5rem 0;
+      }
+
       @media (min-width: 1024px) {
         .auth-left-panel {
           display: flex;
         }
       }
-
+      
       @media (max-width: 768px) {
         .auth-right-panel {
           padding: 1rem;
@@ -377,28 +414,29 @@
             <div id="auth-success" class="success-message-modern" style="display: none;"></div>
 
             <div class="form-field-modern">
-              <label for="email">Email Address</label>
+              <label for="login-input">Email Address or Phone Number</label>
               <div class="input-wrapper">
                 <span class="input-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
                   </svg>
                 </span>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
+                  id="login-input"
+                  name="loginInput"
+                  type="text"
                   class="input-modern"
-                  placeholder="Enter your email"
+                  placeholder="Enter email or phone"
                   required
-                  autocomplete="email"
+                  oninput="handleLoginInput(this.value)"
                 />
               </div>
               <span class="field-error-modern"></span>
             </div>
 
-            <div class="form-field-modern">
+            <!-- Password Container (Hidden by default, shown for Email) -->
+            <div class="form-field-modern" id="password-container" style="display:none;">
               <label for="password">Password</label>
               <div class="input-wrapper">
                 <span class="input-icon">
@@ -413,7 +451,6 @@
                   type="password"
                   class="input-modern"
                   placeholder="Enter your password"
-                  required
                   autocomplete="current-password"
                   minlength="6"
                 />
@@ -425,21 +462,34 @@
                 </button>
               </div>
               <span class="field-error-modern"></span>
-            </div>
-
-            <div class="form-options-modern">
-              <label class="checkbox-modern">
-                <input type="checkbox" name="remember" />
-                <span>Remember Me</span>
-              </label>
-              <a href="forgot-password.php" class="forgot-link-modern">Forgot Password?</a>
+              
+              <div class="form-options-modern" style="margin-top: 1rem;">
+                <label class="checkbox-modern">
+                  <input type="checkbox" name="remember" />
+                  <span>Remember Me</span>
+                </label>
+                <a href="forgot-password.php" class="forgot-link-modern">Forgot Password?</a>
+              </div>
             </div>
 
             <button type="submit" class="btn-primary-modern" id="signin-btn">
-              <span id="signin-text">Log In</span>
-              <span id="signin-loader" style="display:none;">Signing in...</span>
+              <span id="signin-text">Continue</span>
+              <span id="signin-loader" style="display:none;">Processing...</span>
             </button>
           </form>
+
+          <!-- OTP Verify Modal -->
+          <div id="otp-modal" class="auth-modal" style="display:none;">
+              <div class="auth-modal-content">
+                  <span class="close-modal" onclick="closeOtpModal()">&times;</span>
+                  <h2>Verify OTP</h2>
+                  <p>Enter the 6-digit code sent to your phone</p>
+                  <div class="otp-input-group">
+                      <input type="text" maxlength="6" id="otp-input" placeholder="000000" class="input-modern" style="text-align: center; letter-spacing: 0.5rem; font-size: 1.5rem;">
+                  </div>
+                  <button type="button" class="btn-primary-modern" onclick="verifyOtp()" style="margin-top: 1rem;">Verify & Login</button>
+              </div>
+          </div>
 
           <div class="auth-divider-modern">
             <span>Or</span>
@@ -472,6 +522,163 @@
         }
       }
       window.togglePassword = togglePassword;
+
+      // Handle input change: detect email or phone
+      function handleLoginInput(value) {
+        const container = document.getElementById('password-container');
+        const loginInput = document.getElementById('login-input');
+        // Simple patterns
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        const isPhone = /^\d[\d\s\-\+\(\)]{8,}$/.test(value); // Allow some formatting, check later for strict 10 digit
+
+        const errorSpan = loginInput.parentElement.parentElement.querySelector('.field-error-modern');
+        if (errorSpan) errorSpan.style.display = 'none';
+        loginInput.style.borderColor = '';
+
+        if (isEmail) {
+            container.style.display = 'block';
+            document.getElementById('password').setAttribute('required', 'required');
+        } else if (isPhone) {
+            container.style.display = 'none';
+            document.getElementById('password').removeAttribute('required');
+        } else {
+            // Default state
+            container.style.display = 'none';
+            document.getElementById('password').removeAttribute('required');
+        }
+      }
+      window.handleLoginInput = handleLoginInput;
+
+      // Override default form submit to handle phone vs email
+      const originalSignIn = window.handleSignIn; 
+
+      // Replace generic handleSignIn with specific one for this page
+      window.handleSignIn = function(event) {
+          event.preventDefault();
+          const loginInputField = document.getElementById('login-input');
+          const loginInput = loginInputField.value.trim();
+          
+          let errorMsg = '';
+          
+          // Strict Validation Check
+          const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginInput);
+          const isPhone = /^\d{10}$/; // Strict 10 digit check for login submission
+          
+          if (isEmail) {
+              loginWithEmail(loginInput);
+          } else {
+              // Check if valid phone number (strip non-digits for check)
+              const cleanPhone = loginInput.replace(/[\s\-\+\(\)]/g, '');
+              
+              if (/^\d{10}$/.test(cleanPhone)) {
+                  showOtpModal(cleanPhone);
+              } else {
+                  // Not a valid email OR phone
+                  const errorSpan = loginInputField.parentElement.parentElement.querySelector('.field-error-modern');
+                  if (errorSpan) {
+                      errorSpan.textContent = 'Please enter a valid email or 10-digit phone number';
+                      errorSpan.style.display = 'block';
+                  }
+                  loginInputField.style.borderColor = '#ef4444';
+              }
+          }
+      };
+
+      function loginWithEmail(email) {
+          const passwordField = document.getElementById('password');
+          const password = passwordField.value;
+          
+          if (!password) { 
+              const errorSpan = passwordField.parentElement.parentElement.querySelector('.field-error-modern');
+              if (errorSpan) {
+                  errorSpan.textContent = 'Password is required';
+                  errorSpan.style.display = 'block';
+              }
+              passwordField.style.borderColor = '#ef4444';
+              return; 
+          }
+          
+          // Use fetch to existing API
+           const btn = document.getElementById('signin-btn');
+           const btnText = document.getElementById('signin-text');
+           const btnLoader = document.getElementById('signin-loader');
+           
+           btn.disabled = true;
+           btnText.style.display = 'none';
+           btnLoader.style.display = 'inline';
+
+           fetch('api/auth/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Success logic similar to script.js
+                    const user = data.user;
+                    const userData = {
+                        email: user.email,
+                        firstName: user.firstName,
+                        name: `${user.firstName} ${user.lastName}`,
+                        loginTime: new Date().toISOString()
+                    };
+                    localStorage.setItem('userSession', JSON.stringify(userData));
+                    window.location.href = 'index.php';
+                } else {
+                    const errorDiv = document.getElementById('auth-error');
+                    if (errorDiv) {
+                        errorDiv.textContent = data.message;
+                        errorDiv.style.display = 'block';
+                    } else {
+                        alert(data.message);
+                    }
+                    btn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnLoader.style.display = 'none';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                btn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.style.display = 'none';
+            });
+      }
+
+      function showOtpModal(phone) {
+          console.log(`Sending OTP to ${phone}`);
+          // Clear any previous OTP inputs/errors
+          document.getElementById('otp-input').value = '';
+          document.getElementById('otp-modal').style.display = 'flex';
+      }
+
+      function closeOtpModal() {
+          document.getElementById('otp-modal').style.display = 'none';
+      }
+      window.closeOtpModal = closeOtpModal;
+
+      function verifyOtp() {
+          const otpInput = document.getElementById('otp-input');
+          const otp = otpInput.value.trim();
+          
+          if (/^\d{6}$/.test(otp)) {
+              // Verify OTP with API (simulated here)
+              const phone = document.getElementById('login-input').value;
+               const userData = {
+                    phone: phone,
+                    firstName: 'User',
+                    name: 'Mobile User',
+                    loginTime: new Date().toISOString()
+                };
+                localStorage.setItem('userSession', JSON.stringify(userData));
+                window.location.href = 'index.php';
+          } else {
+              alert('Please enter a valid 6-digit OTP');
+              otpInput.style.borderColor = '#ef4444';
+          }
+      }
+      window.verifyOtp = verifyOtp;
     </script>
   </body>
 </html>

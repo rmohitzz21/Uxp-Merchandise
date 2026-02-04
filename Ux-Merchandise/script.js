@@ -1649,27 +1649,74 @@ function handleSignUp(event) {
     if (btnLoader) btnLoader.style.display = 'inline';
   }
   
-  // TODO: Replace with actual API call
-  setTimeout(() => {
-    // Create user session
-    const userData = {
-      email: email,
+  // Call actual API
+  fetch('api/auth/signup.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
       firstName: firstName,
       lastName: lastName,
-      name: `${firstName} ${lastName}`.trim() || email.split('@')[0],
-      phone: phone || '',
-      loginTime: new Date().toISOString()
-    };
-    setUserSession(userData);
-    
-    if (successDiv) {
-      successDiv.textContent = 'Account created successfully! Redirecting...';
-      successDiv.style.display = 'block';
+      fullName: form.fullName ? form.fullName.value.trim() : null,
+      email: email,
+      phone: phone,
+      password: password
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+      const user = data.user;
+      const tokens = data.tokens;
+      
+      const userData = {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        phone: phone || '',
+        loginTime: new Date().toISOString()
+      };
+      
+      // Store Session
+      setUserSession(userData);
+      
+      // Store Tokens
+      localStorage.setItem('accessToken', tokens.access_token);
+      localStorage.setItem('refreshToken', tokens.refresh_token);
+      
+      if (successDiv) {
+        successDiv.textContent = 'Account created successfully! Redirecting...';
+        successDiv.style.display = 'block';
+      }
+      setTimeout(() => {
+        window.location.href = 'index.php';
+      }, 1500);
+    } else {
+      if (errorDiv) {
+        errorDiv.textContent = data.message || 'Registration failed';
+        errorDiv.style.display = 'block';
+      }
+      if (btn) {
+        btn.disabled = false;
+        if (btnText) btnText.style.display = 'inline';
+        if (btnLoader) btnLoader.style.display = 'none';
+      }
     }
-    setTimeout(() => {
-      window.location.href = 'index.php';
-    }, 2000);
-  }, 1500);
+  })
+  .catch(error => {
+    console.error('Signup error:', error);
+    if (errorDiv) {
+      errorDiv.textContent = 'An error occurred. Please try again.';
+      errorDiv.style.display = 'block';
+    }
+    if (btn) {
+      btn.disabled = false;
+      if (btnText) btnText.style.display = 'inline';
+      if (btnLoader) btnLoader.style.display = 'none';
+    }
+  });
 }
 
 // Forgot password handler - Step 1: Send reset link

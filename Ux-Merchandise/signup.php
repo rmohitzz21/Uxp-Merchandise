@@ -414,6 +414,27 @@
             </div>
 
             <div class="form-field-modern">
+              <label for="phone">Phone Number</label>
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </span>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  class="input-modern"
+                  placeholder="Enter your phone number"
+                  required
+                  autocomplete="tel"
+                />
+              </div>
+              <span class="field-error-modern"></span>
+            </div>
+
+            <div class="form-field-modern">
               <label for="password">Password</label>
               <div class="input-wrapper">
                 <span class="input-icon">
@@ -517,12 +538,40 @@
       }
       window.togglePassword = togglePassword;
 
-      // Update signup handler to use fullName
+      // Update signup handler with phone validation
       const originalHandleSignUp = window.handleSignUp;
       if (originalHandleSignUp) {
         window.handleSignUp = function(event) {
           event.preventDefault();
           const form = event.target;
+          
+          // --- Phone Validation ---
+          const phoneInput = form.phone;
+          if (phoneInput) {
+            const phone = phoneInput.value.trim();
+            // Validate: 10 digits, numeric only (simple validation)
+            const phoneRegex = /^\d{10}$/;
+            
+            // Clear previous error first
+            const errorSpan = phoneInput.parentElement.parentElement.querySelector('.field-error-modern');
+            if (errorSpan) {
+                errorSpan.style.display = 'none';
+                errorSpan.textContent = '';
+            }
+            phoneInput.style.borderColor = '';
+
+            if (phone && !phoneRegex.test(phone)) {
+               // Show error
+               if (errorSpan) {
+                   errorSpan.textContent = 'Please enter a valid 10-digit phone number';
+                   errorSpan.style.display = 'block';
+               }
+               phoneInput.style.borderColor = '#ef4444';
+               return; // Stop submission
+            }
+          }
+          // ------------------------
+
           const fullName = form.fullName?.value.trim() || '';
           const names = fullName.split(' ');
           const firstName = names[0] || '';
