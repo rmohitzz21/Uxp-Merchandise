@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 
-require_once '../../includes/config.php';
+require_once __DIR__ . '/../../includes/config.php';
 
 if ($conn->connect_error) {
     http_response_code(500);
@@ -86,11 +86,8 @@ if (!empty($phone)) {
     $stmt->close();
 }
 
-// Use plain text to maintain compatibility with legacy 'admin123' check if needed, 
-// OR switch to password_hash if new system fully supports it. 
-// For "Proper" PHP, we should hash.
-// $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-$passwordHash = $password; // Keeping plain text request from previous turns for compatibility
+// Hash Password
+$passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 // Insert User
 $role = 'customer';
@@ -100,8 +97,11 @@ $createdAt = date('Y-m-d H:i:s');
 $conn->begin_transaction();
 
 try {
-    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, phone, password_hash, role, is_blocked, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssis", $firstName, $lastName, $email, $phone, $passwordHash, $role, $isBlocked, $createdAt);
+    // Generate updated_at
+    $updatedAt = $createdAt; // Initially the same
+
+    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, phone, password_hash, role, is_blocked, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssiss", $firstName, $lastName, $email, $phone, $passwordHash, $role, $isBlocked, $createdAt, $updatedAt);
     
     if (!$stmt->execute()) {
         throw new Exception("Registration failed: " . $stmt->error);

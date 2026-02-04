@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 29, 2026 at 07:39 AM
+-- Generation Time: Feb 04, 2026 at 01:34 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -96,7 +96,7 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `category`, `price`, `old_price`, `image`, `stock`, `rating`, `created_at`, `updated_at`) VALUES
-(4, 'kmlm', 'mlmlm', 'Mockup', 89.00, 8.00, 'img/products/58eaeeffcb0355e6bda5cc9bbaae46b1.jpeg', 10, 1.00, '2026-01-27 12:59:35', '2026-01-27 12:59:35');
+(4, 'kmlm', 'mlmlm', 'Booklet', 89.00, NULL, 'img/products/58eaeeffcb0355e6bda5cc9bbaae46b1.jpeg', 10, 3.00, '2026-01-27 12:59:35', '2026-02-04 06:18:46');
 
 -- --------------------------------------------------------
 
@@ -113,16 +113,31 @@ CREATE TABLE `users` (
   `phone` varchar(20) DEFAULT NULL,
   `role` enum('customer','admin') DEFAULT 'customer',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `is_blocked` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `email`, `password_hash`, `first_name`, `last_name`, `phone`, `role`, `created_at`, `updated_at`) VALUES
-(1, 'jj', 'nknn', 'nkn', 'mk', '55456', 'customer', '2026-01-27 17:14:21', '2026-01-27 17:14:21'),
-(3, 'jj@gmail.com', 'nknn', 'nkn', 'mk', '55456', 'customer', '2026-01-27 17:14:53', '2026-01-27 17:14:53');
+INSERT INTO `users` (`id`, `email`, `password_hash`, `first_name`, `last_name`, `phone`, `role`, `created_at`, `updated_at`, `is_blocked`) VALUES
+(1, 'jj', 'nknn', 'nkn', 'mk', '55456', 'customer', '2026-01-27 17:14:21', '2026-01-27 17:14:21', 0),
+(3, 'jj@gmail.com', 'nknn', 'nkn', 'mk', '55456', 'customer', '2026-01-27 17:14:53', '2026-02-04 10:53:00', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_tokens`
+--
+
+CREATE TABLE `user_tokens` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `refresh_token` varchar(255) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
@@ -166,6 +181,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -200,6 +222,12 @@ ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- Constraints for dumped tables
 --
 
@@ -222,6 +250,12 @@ ALTER TABLE `orders`
 ALTER TABLE `order_items`
   ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
   ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`);
+
+--
+-- Constraints for table `user_tokens`
+--
+ALTER TABLE `user_tokens`
+  ADD CONSTRAINT `user_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

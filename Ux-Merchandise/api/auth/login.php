@@ -47,10 +47,23 @@ if ($result->num_rows === 1) {
     // In production, use password_verify($password, $user['password_hash'])
     // SQL dump insert: 'nknn'
     
-    // Checking if password matches
-    // NOTE: Based on SQL dump, it seems passwords might be stored as plain text or simple hash currently.
-    // If password_hash contains plain text:
-    if ($password === $user['password_hash'] || $password === 'admin123') { // Backdoor/Default for testing if not hashed
+    // Verify Password (Supports both Hashed and Legacy Plain Text)
+    $isPasswordCorrect = false;
+    
+    // Check if hash matches (Modern secure way)
+    if (password_verify($password, $user['password_hash'])) {
+        $isPasswordCorrect = true;
+    } 
+    // Fallback: Check plain text (Legacy support)
+    else if ($password === $user['password_hash']) {
+        $isPasswordCorrect = true;
+    }
+    // Fallback: Admin backdoor (Dev only - Consider removing for production)
+    else if ($password === 'admin123') {
+        $isPasswordCorrect = true;
+    }
+
+    if ($isPasswordCorrect) {
          
         // CHECK IF BLOCKED
         if ($user['is_blocked'] == 1) {

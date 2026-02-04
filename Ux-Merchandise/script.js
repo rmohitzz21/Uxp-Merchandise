@@ -1580,11 +1580,11 @@ function handleSignUp(event) {
     }
     form.password.style.borderColor = '#ef4444';
     isValid = false;
-  } else if (password.length < 8) {
+  } else if (password.length < 6) {
     const errorSpan = form.password.parentElement?.querySelector('.field-error-modern') || 
                      form.password.parentElement?.querySelector('.field-error');
     if (errorSpan) {
-      errorSpan.textContent = 'Password must be at least 8 characters';
+      errorSpan.textContent = 'Password must be at least 6 characters';
       errorSpan.style.display = 'block';
     }
     form.password.style.borderColor = '#ef4444';
